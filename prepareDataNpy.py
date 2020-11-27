@@ -24,7 +24,7 @@ config = Config()
 config.nbFrequencyBands = 29
 config.nbVec = 351
 
-config.rootPath = '/home/lagrange/data/storage/cense/confy/'
+config.rootPath = os.path.expanduser('~/data/storage/cense/confy/')
 config.inputPath = config.rootPath+'raw/'
 config.dataPath = config.rootPath+'data/'
 
@@ -33,7 +33,7 @@ config.sensorInfo = sensor_list('sensorList.csv')
 config.month = ['january', 'march']
 config.monthPath = ['01_02_2020', '04_05_2020']
 
-config.localPath = '/home/lagrange/drive/experiments/data/local/censeConfy/'
+config.localPath = os.path.expanduser('~/drive/experiments/data/local/censeConfy/')
 
 def generateDataset(config):
   tmpFileName = config.dataPath+'tmpDa'
@@ -49,6 +49,8 @@ def generateDataset(config):
     hourLimit = 25
 
 
+  if config.dryRun:
+    dataId += 'DryRun'
   if config.oneDay:
     dataId += 'OneDay'
   if config.oneHour:
@@ -59,17 +61,17 @@ def generateDataset(config):
   for sCount, s in enumerate(config.sensorInfo): #tq.tqdm(enumerate(sensorInfo), total=len(sensorInfo)):
     print('Sensor '+str(sCount)+' / '+str(len(config.sensorInfo)))
 
-    if dryRun:
+    if config.dryRun:
       data = np.zeros((10, 32))
-      arrayTime.append(data[:, 0])
-      arraySpec.append(data[:, 3:])
+      arrayTime=data[:, 0]
+      arraySpec=data[:, 3:]
     else:
       fileNames = []
       for year in [2019, 2020]:
         for month in range(13):
           for day in range(dayLimit):
             for hour in range(hourLimit):
-              f = config.inputPath+config.monthPath[mType]+'/'+s["sID"]+'/'+str(year)+'/'+str(month)+'/'+str(day)+'/'+str(hour)+'.zip'
+              f = config.inputPath+config.monthPath[config.monthType]+'/'+s["sID"]+'/'+str(year)+'/'+str(month)+'/'+str(day)+'/'+str(hour)+'.zip'
               if os.path.exists(f):
                 fileNames.append(f)
       fCount = 0
@@ -106,13 +108,14 @@ if __name__ == '__main__':
 
     # Model parameters
     parser.add_argument('-D', action='store_true', help='OneDay')
+    parser.add_argument('-d', action='store_true', help='debug')
     parser.add_argument('-H', action='store_true', help='OneHour')
     parser.add_argument('-C', action='store_true', help='confy')
 
     args = parser.parse_args()
-    print(args)
     config.oneDay = args.D
     config.oneHour = args.H
     config.monthType = args.C
+    config.dryRun = args.d
 
     generateDataset(config)
