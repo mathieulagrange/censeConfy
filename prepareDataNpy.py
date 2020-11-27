@@ -80,7 +80,7 @@ def generateDataset(config):
 
       for inputFileName in tq.tqdm(fileNames, total=len(fileNames)):
         shutil.copy(inputFileName, tmpFileName+'.zip')
-        os.system('unzip -d /tmp '+tmpFileName+'.zip')
+        os.system('unzip -qq -d /tmp '+tmpFileName+'.zip')
         csvFileName = os.path.basename(inputFileName).replace('zip', 'csv')
         with open('/tmp/'+csvFileName, 'r') as csvfileID:
           reader = csv.reader(csvfileID, delimiter=',')
