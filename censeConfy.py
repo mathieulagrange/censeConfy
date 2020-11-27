@@ -36,7 +36,7 @@ def set(args):
   experiment.factor.month = ['january', 'march']
   experiment.factor.reduce = ['none', 'OneDay', 'OneDayOneHour']
   experiment.factor.sensor = list(range(16))
-  experiment.factor.period = ['none', 'day', 'evening', 'night']
+#  experiment.factor.period = ['none', 'day', 'evening', 'night']
 
   experiment.metric.t = ['mean', 'std']
   experiment.metric.v = ['mean', 'std']
