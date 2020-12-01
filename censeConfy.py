@@ -4,14 +4,10 @@ import time
 import numpy as np
 from pathlib import Path
 import os
+import csv
 
 if __name__ == "__main__":
   el.experiment.run()
-
-# use case where:
-#   - the results are stored on disk using npy files
-#   - one factor affects the size of the results vectors
-#   - the metrics does not operate on the same data, resulting on result vectors with different sizes per metric
 
 def set(args):
   experiment = el.experiment.Experiment()
@@ -22,8 +18,7 @@ def set(args):
   experiment.project.version = '0.1'
 
   experiment.path.input = '~/data/storage/cense/confy/data/'
-  experiment.path.predict = '~/data/experiments/'+experiment.project.name+'/predict/'
-  experiment.path.aggregate = '~/data/experiments/'+experiment.project.name+'/aggregate/'
+  experiment.path.output = '~/data/experiments/'+experiment.project.name+'/'
   experiment.path.code = '~/experiments/censeConfy/'
   # experiment.path.tmp = '/tmp/'+experiment.runId
   experiment.setPath()
@@ -38,9 +33,9 @@ def set(args):
   experiment.factor.sensor = list(range(16))
 #  experiment.factor.period = ['none', 'day', 'evening', 'night']
 
-  experiment.metric.t = ['mean', 'std']
-  experiment.metric.v = ['mean', 'std']
-  experiment.metric.b = ['mean', 'std']
+  experiment.metric.t = ['mean', 'day', 'evening', 'night']
+  experiment.metric.v = ['day', 'evening', 'night', 'all']
+  experiment.metric.b = ['day', 'evening', 'night', 'all']
   experiment.metric.duration = ['mean']
   return experiment
 
@@ -52,18 +47,39 @@ def step(setting, experiment):
       dataFileName += setting.reduce
     dataFileName = experiment.path.input+dataFileName+'/'+dataFileName+'_sensor_'+str(setting.sensor)+'_spec.npy'
     print(dataFileName)
-    command = 'cd ../censeDomainSpecialization && python3 inference.py --dataset TVBCense_dev -rnn --datasetName '+dataFileName+' --outputPath  '+experiment.path.predict+' --pretrained vec -finetune'+' --outputName  '+setting.id()
+    command = 'cd ../censeDomainSpecialization && python3 inference.py --dataset TVBCense_dev -rnn --datasetName '+dataFileName+' --outputPath  '+experiment.path.output+' --pretrained vec -finetune'+' --outputName  '+setting.id()
     print(command)
     os.system(command)
 
+  elif setting.task is 'aggregate':
+    # load file
+    fileName = experiment.path.predict+setting.alternative('task', 'predict').id()+'.txt'
+    print(fileName)
+    with open(fileName, 'r') as csvfileID:
+      reader = csv.reader(csvfileID, delimiter=',')
+    for row in reader:
+      print(row)
+      v = np.array([float(s) for s in row])
+      print(v)
+    print(fileName)
+
   baseFileName = setting.id()
   duration = time.time()-tic
-  np.save(os.path.expanduser(experiment.path.predict+baseFileName+'_duration.npy'), duration)
+  np.save(os.path.expanduser(experiment.path.output+baseFileName+'_duration.npy'), duration)
 
 # uncomment this method to fine tune display of metrics
-def display(experiment, settings):
-  (data, desc, header)  = experiment.metric.get('mae', settings, experiment.path.output, settingEncoding = experiment._settingEncoding)
+# def display(experiment, settings):
+#   (data, desc, header)  = experiment.metric.get('duration', settings, experiment.path.output, settingEncoding = experiment._settingEncoding)
+#
+#   print(header)
+#   print(desc)
+#   print(len(data))
 
-  print(header)
-  print(desc)
-  print(len(data))
+def day(data):
+  return np.mean(data)
+
+def evening(data):
+  return np.mean(data)
+
+def night(data):
+  return np.mean(data)
