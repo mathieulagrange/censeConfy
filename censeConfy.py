@@ -18,7 +18,7 @@ def set(args):
   experiment.project.version = '0.1'
 
   experiment.path.input = '~/data/storage/cense/confy/data/'
-  experiment.path.output = '~/data/experiments/'+experiment.project.name+'/'
+  experiment.path.output = '~/drive/experiments/data/local/'+experiment.project.name+'/'
   experiment.path.code = '~/experiments/censeConfy/'
   # experiment.path.tmp = '/tmp/'+experiment.runId
   experiment.setPath()
