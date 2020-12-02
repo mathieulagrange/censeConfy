@@ -46,22 +46,22 @@ def step(setting, experiment):
     if setting.reduce is not 'none':
       dataFileName += setting.reduce
     dataFileName = experiment.path.input+dataFileName+'/'+dataFileName+'_sensor_'+str(setting.sensor)+'_spec.npy'
-    print(dataFileName)
+    # print(dataFileName)
     command = 'cd ../censeDomainSpecialization && python3 inference.py --dataset TVBCense_dev -rnn --datasetName '+dataFileName+' --outputPath  '+experiment.path.output+' --pretrained vec -finetune'+' --outputName  '+setting.id()
-    print(command)
+    # print(command)
     os.system(command)
 
   elif setting.task is 'aggregate':
     # load file
     fileName = experiment.path.predict+setting.alternative('task', 'predict').id()+'.txt'
-    print(fileName)
+    # print(fileName)
     with open(fileName, 'r') as csvfileID:
       reader = csv.reader(csvfileID, delimiter=',')
     for row in reader:
       print(row)
       v = np.array([float(s) for s in row])
       print(v)
-    print(fileName)
+    # print(fileName)
 
   baseFileName = setting.id()
   duration = time.time()-tic
