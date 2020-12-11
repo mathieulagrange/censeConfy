@@ -41,7 +41,7 @@ def step(setting, experiment):
     hourLimit = 25
 
   dataId = setting.id(sort=False)
-  print(dataPath+dataId)
+  # print(dataPath+dataId)
   if not os.path.exists(dataPath):
     os.makedirs(dataPath)
   #for setting.sensor, s in enumerate(sensorInfo): #tq.tqdm(enumerate(sensorInfo), total=len(sensorInfo)):

@@ -60,11 +60,11 @@ def step(setting, experiment):
     config.datasetName = experiment.path.input+setting.alternative('step', 'data').id(sort=False)+'_spec.npy'
     config.outputPath = ''
     config.test = False
-    print(config.datasetName)
+    # print(config.datasetName)
     # print(config)
     presence, timeOfPresence = main(config)
-    print(presence.shape)
-    print(timeOfPresence)
+    # print(presence.shape)
+    # print(timeOfPresence)
 
     timeVec = np.load(config.datasetName.replace('_spec.npy', '_time.npy'))
     sources = ['traffic', 'voice', 'bird']
