@@ -20,7 +20,7 @@ def sensor_list(sListFile):
     with open(sListFile, 'r') as csvfileID:
         reader = csv.reader(csvfileID, delimiter=',')
         rowCount = sum(1 for row in csvfileID)
-        print('Found {} sensors.'.format(rowCount))
+        # print('Found {} sensors.'.format(rowCount))
         sensorInfo = []
         csvfileID.seek(0)
         for row in reader:
