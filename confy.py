@@ -7,7 +7,7 @@ import os
 import csv
 import sys
 import types
-from datetime import datetime
+import datetime
 
 if __name__ == "__main__":
   el.run.run()
@@ -32,17 +32,17 @@ def set(args):
 
   experiment.host = ['pc-lagrange.irccyn.ec-nantes.fr']
 
-  experiment.factor.e1 = el.factor.Factor()
+  experiment.factor.e1 = el.Factor()
   experiment.factor.e1.step = ['data', 'presence']
   experiment.factor.e1.month = ['january', 'march']
   experiment.factor.e1.period = ['month', 'day', 'hour']
   experiment.factor.e1.sensor = list(range(16))
   experiment.factor.e1.default('period', 'month')
 
-  experiment.factor.e2 = el.factor.Factor(experiment.factor.e1)
-  experiment.factor.e2.step = ['split']
+  experiment.factor.e2 = experiment.factor.e1.copy()
+  experiment.factor.e2.step = ['part']
   experiment.factor.e2.source = ['traffic', 'voice', 'bird']
-  experiment.factor.e2.split = ['day', 'evening', 'night', 'full']
+  experiment.factor.e2.part = ['day', 'evening', 'night', 'full']
 
   experiment.metric.presence = ['mean']
   experiment.metric.duration = ['mean']
@@ -68,44 +68,54 @@ def step(setting, experiment):
     presence, timeOfPresence = main(config)
     # print(presence.shape)
     # print(timeOfPresence)
-    np.save(experiment.path.output+setting.id()+'_presence.npy', predc)
-  if setting.step == 'split':
-    presenceName = experiment.path.output+setting.id(omitFactor=['source', 'split'])
-    presence = np.load(baseName.replace('_split', '_presence')+'_presence.npy')
-    print(presenceName)
+    np.save(experiment.path.output+setting.id()+'_presence.npy', presence)
+  if setting.step == 'part':
+    presenceName = experiment.path.output+setting.id(hideFactor=['source', 'part']).replace('step_part', 'step_presence')+'_presence.npy'
+    # print(presenceName)
+    presence = np.load(presenceName)
 
-    timeName = experiment.path.input+experiment.path.output+setting.id(omitFactor=['source', 'split'], sort=False)+'_time.npy'
-    print(timeName)
+    timeName = experiment.path.input+setting.id(hideFactor=['source', 'part'], sort=False).replace('step_part', 'step_data')+'_time.npy'
+    # print(timeName)
+    timeVec = np.load(timeName)
+    if setting.part == 'day':
+      period = [7, 20]
+    if setting.part == 'evening':
+      period = [20, 23]
+    if setting.part == 'night':
+      period = [0, 7]
+    if setting.part == 'full':
+      period = [0, 24]
+    if setting.source == 'traffic':
+      source = 0
+    if setting.source == 'voice':
+      source = 1
+    if setting.source == 'bird':
+      source = 2
 
-    timeVec = np.load(timeName))
+    presence = selectData(presence, timeVec, period, source)
+    presenceName = experiment.path.output+setting.id()+'_presence.npy'
+    # print(presenceName)
+    np.save(presenceName, presence)
 
   if setting.step in ['data', 'presence']:
     duration = time.time()-tic
     np.save(experiment.path.output+setting.id()+'_duration.npy', duration)
 
-def selectData(data, period):
+def selectData(presence, time, period, source):
   acc = 0
   nbAcc = 0
-  for t in range(data.shape[1]):
-    h = datetime.utcfromtimestamp(data[1, t]/1000).hour
+  # print(presence.shape)
+  # print(time.shape)
+  for t in range(presence.shape[0]):
+    h = datetime.datetime.utcfromtimestamp(time[t]/1000).hour
     if h>=period[0] and h<=period[1]:
-      acc += data[0, t]
+      for b in range(presence.shape[0]):
+        acc += presence[t, b, source]
       nbAcc += 1
-  return acc/nbAcc
-
-def day(data):
-  return np.mean(selectData(data, [7, 20]))
-
-def evening(data):
-  return np.mean(selectData(data, [20, 23]))
-
-def night(data):
-  return np.mean(selectData(data, [0, 7]))
-
-def full(data):
-  return np.mean(data[0, :])
-
-
+  if nbAcc:
+    return acc/nbAcc
+  else:
+    return 0
 
 # uncomment this method to fine tune display of metrics
 # def display(experiment, settings):
