@@ -30,24 +30,27 @@ def set(args):
   experiment._factorFormatInReduceLength = 2
   experiment._metricFormatInReduceLength = 1
 
-
   experiment.host = ['pc-lagrange.irccyn.ec-nantes.fr']
 
-  experiment.factor.step = ['data', 'presence']
-  experiment.factor.month = ['january', 'march']
-  experiment.factor.period = ['month', 'day', 'hour']
-  experiment.factor.sensor = list(range(16))
-  experiment.factor.default('period', 'month')
+  experiment.factor.e1 = el.factor.Factor()
+  experiment.factor.e1.step = ['data', 'presence']
+  experiment.factor.e1.month = ['january', 'march']
+  experiment.factor.e1.period = ['month', 'day', 'hour']
+  experiment.factor.e1.sensor = list(range(16))
+  experiment.factor.e1.default('period', 'month')
 
-  experiment.metric.traffic = ['day', 'evening', 'night', 'full']
-  experiment.metric.voice = ['day', 'evening', 'night', 'full']
-  experiment.metric.bird = ['day', 'evening', 'night', 'full']
+  experiment.factor.e2 = el.factor.Factor(experiment.factor.e1)
+  experiment.factor.e2.step = ['split']
+  experiment.factor.e2.source = ['traffic', 'voice', 'bird']
+  experiment.factor.e2.split = ['day', 'evening', 'night', 'full']
+
+  experiment.metric.presence = ['mean']
   experiment.metric.duration = ['mean']
   return experiment
 
 def step(setting, experiment):
   tic = time.time()
-  if setting.step is 'data':
+  if setting.step == 'data':
     import prepareDataNpy
     prepareDataNpy.step(setting, experiment)
   if setting.step is 'presence':
@@ -65,18 +68,20 @@ def step(setting, experiment):
     presence, timeOfPresence = main(config)
     # print(presence.shape)
     # print(timeOfPresence)
+    np.save(experiment.path.output+setting.id()+'_presence.npy', predc)
+  if setting.step == 'split':
+    presenceName = experiment.path.output+setting.id(omitFactor=['source', 'split'])
+    presence = np.load(baseName.replace('_split', '_presence')+'_presence.npy')
+    print(presenceName)
 
-    timeVec = np.load(config.datasetName.replace('_spec.npy', '_time.npy'))
-    sources = ['traffic', 'voice', 'bird']
-    for iC in range(config.nClasses):
-      predc = np.zeros((2, len(timeOfPresence)))
-      for tpi, tp in enumerate(timeOfPresence):
-        predc[0, tpi] = tp[iC]
-        predc[1, tpi] = timeVec[tpi]
-      np.save(experiment.path.output+setting.id()+'_'+sources[iC]+'.npy', predc)
+    timeName = experiment.path.input+experiment.path.output+setting.id(omitFactor=['source', 'split'], sort=False)+'_time.npy'
+    print(timeName)
 
-  duration = time.time()-tic
-  np.save(experiment.path.output+setting.id()+'_duration.npy', duration)
+    timeVec = np.load(timeName))
+
+  if setting.step in ['data', 'presence']:
+    duration = time.time()-tic
+    np.save(experiment.path.output+setting.id()+'_duration.npy', duration)
 
 def selectData(data, period):
   acc = 0
