@@ -45,8 +45,8 @@ def set(args):
   experiment.factor.e2.source = ['traffic', 'voice', 'bird']
   experiment.factor.e2.part = ['day', 'evening', 'night', 'full']
 
-  experiment.metric.presence = ['mean']
-  experiment.metric.timeOfPresence = ['mean']
+  experiment.metric.presence = ['mean%', 'std%']
+  experiment.metric.timeOfPresence = ['mean%', 'std%']
   experiment.metric.duration = ['mean']
   return experiment
 
@@ -69,30 +69,36 @@ def step(setting, experiment):
     # print(config)
     presence, timeOfPresence = main(config)
     # print(presence.shape)
-    # print(timeOfPresence)
+    # print(timeOfPresence.shape)
 
     np.save(experiment.path.output+setting.id()+'_presence.npy', presence)
     np.save(experiment.path.output+setting.id()+'_timeOfPresence.npy', timeOfPresence)
   if setting.step == 'part':
     # print(setting.source)
     if setting.sensor is not 'all':
-      presence = getPresence(setting, experiment)
+      presence = getData(setting, experiment)
+      timeOfPresence = getData(setting, experiment, type='timeOfPresence')
     else:
       presence = np.zeros(0)
+      timeOfPresence = np.zeros(0)
       for k in range(len(experiment.factor.sensor)-1):
-        presence = np.concatenate((presence, getPresence(setting.alternative('sensor', value=k), experiment)))
+        presence = np.concatenate((presence, getData(setting.alternative('sensor', value=k), experiment)))
+        timeOfPresence = np.concatenate((timeOfPresence, getData(setting.alternative('sensor', value=k), experiment, 'timeOfPresence')))
 
     # print(presence)
     presenceName = experiment.path.output+setting.id()+'_presence.npy'
-    # print(presenceName)
+    # print(presence.shape)
     np.save(presenceName, presence)
+    timeOfPresenceName = experiment.path.output+setting.id()+'_timeOfPresence.npy'
+    # print(timeOfPresence.shape)
+    np.save(timeOfPresenceName, timeOfPresence)
 
   if setting.step in ['data', 'presence']:
     duration = time.time()-tic
     np.save(experiment.path.output+setting.id()+'_duration.npy', duration)
 
-def getPresence(setting, experiment):
-  presenceName = experiment.path.output+setting.id(hideFactor=['source', 'part']).replace('step_part', 'step_presence')+'_presence.npy'
+def getData(setting, experiment, type='presence'):
+  presenceName = experiment.path.output+setting.id(hideFactor=['source', 'part']).replace('step_part', 'step_presence')+'_'+type+'.npy'
   # print(presenceName)
   presence = np.load(presenceName)
 
@@ -128,8 +134,13 @@ def selectData(presence, time, period, source):
     # print(h)
     if h>=period[0] and h<=period[1]:
       run = True
-      for b in range(presence.shape[1]):
-        acc += presence[t, b, source]
+      # print(presence.shape)
+      if presence.ndim>2:
+        for b in range(presence.shape[1]):
+          acc += presence[t, b, source]
+          nbAcc += 1
+      else:
+        acc += presence[t, source]
         nbAcc += 1
     if ph>h:
       if nbAcc:
