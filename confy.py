@@ -40,7 +40,7 @@ def set(args):
   experiment.factor.e1.default('period', 'month')
 
   experiment.factor.e2 = experiment.factor.e1.copy()
-  experiment.factor.e2.step = ['part']
+  experiment.factor.e2.step.append('part')
   experiment.factor.e2.source = ['traffic', 'voice', 'bird']
   experiment.factor.e2.part = ['day', 'evening', 'night', 'full']
 
