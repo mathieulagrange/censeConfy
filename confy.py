@@ -41,6 +41,7 @@ def set(args):
 
   experiment.factor.e2 = experiment.factor.e1.copy()
   experiment.factor.e2.step.append('part')
+  experiment.factor.e2.sensor.append('all')
   experiment.factor.e2.source = ['traffic', 'voice', 'bird']
   experiment.factor.e2.part = ['day', 'evening', 'night', 'full']
 
@@ -70,29 +71,15 @@ def step(setting, experiment):
     # print(timeOfPresence)
     np.save(experiment.path.output+setting.id()+'_presence.npy', presence)
   if setting.step == 'part':
-    presenceName = experiment.path.output+setting.id(hideFactor=['source', 'part']).replace('step_part', 'step_presence')+'_presence.npy'
-    # print(presenceName)
-    presence = np.load(presenceName)
+    # print(setting.source)
+    if setting.sensor is not 'all':
+      presence = getPresence(setting, experiment)
+    else:
+      presence = np.zeros(0)
+      for k in range(len(experiment.factor.sensor)-1):
+        presence = np.concatenate((presence, getPresence(setting.alternative('sensor', value=k), experiment)))
 
-    timeName = experiment.path.input+setting.id(hideFactor=['source', 'part'], sort=False).replace('step_part', 'step_data')+'_time.npy'
-    # print(timeName)
-    timeVec = np.load(timeName)
-    if setting.part == 'day':
-      period = [7, 20]
-    if setting.part == 'evening':
-      period = [20, 23]
-    if setting.part == 'night':
-      period = [0, 7]
-    if setting.part == 'full':
-      period = [0, 24]
-    if setting.source == 'traffic':
-      source = 0
-    if setting.source == 'voice':
-      source = 1
-    if setting.source == 'bird':
-      source = 2
-
-    presence = selectData(presence, timeVec, period, source)
+    # print(presence)
     presenceName = experiment.path.output+setting.id()+'_presence.npy'
     # print(presenceName)
     np.save(presenceName, presence)
@@ -101,21 +88,57 @@ def step(setting, experiment):
     duration = time.time()-tic
     np.save(experiment.path.output+setting.id()+'_duration.npy', duration)
 
+def getPresence(setting, experiment):
+  presenceName = experiment.path.output+setting.id(hideFactor=['source', 'part']).replace('step_part', 'step_presence')+'_presence.npy'
+  # print(presenceName)
+  presence = np.load(presenceName)
+
+  timeName = experiment.path.input+setting.id(hideFactor=['source', 'part'], sort=False).replace('step_part', 'step_data')+'_time.npy'
+  # print(timeName)
+  timeVec = np.load(timeName)
+  if setting.part == 'day':
+    period = [7, 20]
+  if setting.part == 'evening':
+    period = [20, 23]
+  if setting.part == 'night':
+    period = [0, 7]
+  if setting.part == 'full':
+    period = [0, 24]
+  if setting.source == 'traffic':
+    source = 0
+  if setting.source == 'voice':
+    source = 1
+  if setting.source == 'bird':
+    source = 2
+
+  return selectData(presence, timeVec, period, source)
+
 def selectData(presence, time, period, source):
   acc = 0
   nbAcc = 0
   # print(presence.shape)
   # print(time.shape)
+  a = []
+  ph=-1
   for t in range(presence.shape[0]):
     h = datetime.datetime.utcfromtimestamp(time[t]/1000).hour
+    # print(h)
     if h>=period[0] and h<=period[1]:
-      for b in range(presence.shape[0]):
+      run = True
+      for b in range(presence.shape[1]):
         acc += presence[t, b, source]
-      nbAcc += 1
-  if nbAcc:
-    return acc/nbAcc
-  else:
-    return 0
+        nbAcc += 1
+    if ph>h:
+      if nbAcc:
+        a.append(acc/nbAcc)
+      acc = 0
+      nbAcc = 0
+    else:
+      ph=h
+
+  if len(a)==0:
+    a.append(0)
+  return np.array(a)
 
 # uncomment this method to fine tune display of metrics
 # def display(experiment, settings):
