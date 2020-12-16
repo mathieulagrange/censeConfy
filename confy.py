@@ -46,6 +46,7 @@ def set(args):
   experiment.factor.e2.part = ['day', 'evening', 'night', 'full']
 
   experiment.metric.presence = ['mean']
+  experiment.metric.timeOfPresence = ['mean']
   experiment.metric.duration = ['mean']
   return experiment
 
@@ -69,7 +70,9 @@ def step(setting, experiment):
     presence, timeOfPresence = main(config)
     # print(presence.shape)
     # print(timeOfPresence)
+
     np.save(experiment.path.output+setting.id()+'_presence.npy', presence)
+    np.save(experiment.path.output+setting.id()+'_timeOfPresence.npy', timeOfPresence)
   if setting.step == 'part':
     # print(setting.source)
     if setting.sensor is not 'all':
