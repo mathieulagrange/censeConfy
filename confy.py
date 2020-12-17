@@ -60,6 +60,7 @@ def step(setting, experiment):
     from inference import main
     config = types.SimpleNamespace()
     config.rnn = True
+    config.sensorData = True
     config.modelName = 'train_scene_source_lorient'
     config.modelPath = experiment.path.output+'../censeDomainSpecialization/model/'
     config.datasetName = experiment.path.input+setting.alternative('step', 'data').id(sort=False)+'_spec.npy'
