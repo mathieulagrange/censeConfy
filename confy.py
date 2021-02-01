@@ -33,27 +33,40 @@ def set(args):
   experiment.host = ['pc-lagrange.irccyn.ec-nantes.fr']
 
   experiment.factor.e1 = el.Factor()
-  experiment.factor.e1.step = ['data', 'presence']
+  experiment.factor.e1.step = ['data']
   experiment.factor.e1.month = ['january', 'march']
   experiment.factor.e1.period = ['month', 'day', 'hour']
   experiment.factor.e1.sensor = list(range(16))
   experiment.factor.e1.default('period', 'month')
 
   experiment.factor.e2 = experiment.factor.e1.copy()
-  experiment.factor.e2.step.append('part')
-  experiment.factor.e2.sensor.append('all')
+  experiment.factor.e2.step = ['presence']
   experiment.factor.e2.typology = ['tvb']
-  experiment.factor.e2.source = ['traffic', 'voice', 'bird']
-  experiment.factor.e2.part = ['day', 'evening', 'night', 'full']
 
   experiment.factor.e3 = experiment.factor.e2.copy()
-  experiment.factor.e3.typology = ['tvbn']
-  experiment.factor.e3.source.append('background']
+  experiment.factor.e3.step = ['part']
+  experiment.factor.e3.sensor.append('all')
+  experiment.factor.e3.source = ['traffic', 'voice', 'bird']
+  experiment.factor.e3.part = ['day', 'evening', 'night', 'full']
 
   experiment.factor.e4 = experiment.factor.e2.copy()
-  experiment.factor.e4.typology = ['cmtvbsn']
-  experiment.factor.e4.source = ['car', 'motorbike', 'truck', 'voice', 'birds', 'seagulls', 'background']
+  experiment.factor.e4.typology = ['tvbn']
 
+  experiment.factor.e5 = experiment.factor.e4.copy()
+  experiment.factor.e5.step = ['part']
+  experiment.factor.e5.sensor.append('all')
+  experiment.factor.e5.source = ['traffic', 'voice', 'bird', 'background']
+  experiment.factor.e5.part = ['day', 'evening', 'night', 'full']
+
+  experiment.factor.e6 = experiment.factor.e2.copy()
+  experiment.factor.e6.typology = ['cmtvbsn']
+
+  experiment.factor.e7 = experiment.factor.e4.copy()
+  experiment.factor.e7.step = ['part']
+  experiment.factor.e7.sensor.append('all')
+  experiment.factor.e7.source = ['car', 'motorbike', 'truck', 'voice', 'birds', 'seagulls', 'background']
+
+  experiment.factor.e7.part = ['day', 'evening', 'night', 'full']
 
   experiment.metric.presence = ['mean%', 'std%']
   experiment.metric.timeOfPresence = ['mean%', 'std%']
@@ -72,12 +85,12 @@ def step(setting, experiment):
     config.rnn = True
     config.sensorData = True
     config.modelName = 'train_scene_source_lorient'
-    config.modelPath = experiment.path.output+'../censeDomainSpecialization/model/'
-    config.datasetName = experiment.path.input+setting.alternative('step', 'data').id(sort=False)+'_spec.npy'
+    config.modelPath = experiment.path.output+'../specialization/model/'
+    config.datasetName = experiment.path.input+setting.id(sort=False).replace('step_presence', 'step_data')+'_spec.npy'
     config.outputPath = ''
     config.test = False
-    # print(config.datasetName)
-    # print(config)
+    config.classes = list(setting.typology)
+
     presence, timeOfPresence = main(config)
     # print(presence.shape)
     # print(timeOfPresence.shape)
