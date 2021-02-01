@@ -164,16 +164,3 @@ def selectData(presence, time, period, source):
   if len(a)==0:
     a.append(0)
   return np.array(a)
-
-# uncomment this method to fine tune display of metrics
-# def display(experiment, settings):
-#   (table, columns, header, nbFactorColumns) = experiment.metric.reduce(experiment.factor.mask(experiment.mask), experiment.path.output, factorDisplay=experiment._factorFormatInReduce, settingEncoding = experiment._settingEncoding, verbose=args.debug, reductionDirectiveModule=config)
-#   # print(table)
-#   # print(columns)
-#   df = pd.DataFrame(table, columns=columns).fillna('')
-#   df[columns[nbFactorColumns:]] = df[columns[nbFactorColumns:]].round(decimals=2)
-#   if selectDisplay:
-#     selector = [columns[i] for i in selectDisplay]
-#     df = df[selector]
-#   print(header)
-#   print(df)
