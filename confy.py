@@ -42,8 +42,18 @@ def set(args):
   experiment.factor.e2 = experiment.factor.e1.copy()
   experiment.factor.e2.step.append('part')
   experiment.factor.e2.sensor.append('all')
+  experiment.factor.e2.typology = ['tvb']
   experiment.factor.e2.source = ['traffic', 'voice', 'bird']
   experiment.factor.e2.part = ['day', 'evening', 'night', 'full']
+
+  experiment.factor.e3 = experiment.factor.e2.copy()
+  experiment.factor.e3.typology = ['tvbn']
+  experiment.factor.e3.source.append('background']
+
+  experiment.factor.e4 = experiment.factor.e2.copy()
+  experiment.factor.e4.typology = ['cmtvbsn']
+  experiment.factor.e4.source = ['car', 'motorbike', 'truck', 'voice', 'birds', 'seagulls', 'background']
+
 
   experiment.metric.presence = ['mean%', 'std%']
   experiment.metric.timeOfPresence = ['mean%', 'std%']
@@ -55,7 +65,7 @@ def step(setting, experiment):
   if setting.step == 'data':
     import prepareDataNpy
     prepareDataNpy.step(setting, experiment)
-  if setting.step is 'presence':
+  if setting.step == 'presence':
     sys.path.append('../specialization')
     from inference import main
     config = types.SimpleNamespace()
@@ -76,7 +86,7 @@ def step(setting, experiment):
     np.save(experiment.path.output+setting.id()+'_timeOfPresence.npy', timeOfPresence)
   if setting.step == 'part':
     # print(setting.source)
-    if setting.sensor is not 'all':
+    if setting.sensor != 'all':
       presence = getData(setting, experiment)
       timeOfPresence = getData(setting, experiment, type='timeOfPresence')
     else:
