@@ -61,16 +61,18 @@ def set(args):
   experiment.factor.e6 = experiment.factor.e2.copy()
   experiment.factor.e6.typology = ['cmtvbsn']
 
-  experiment.factor.e7 = experiment.factor.e4.copy()
+  experiment.factor.e7 = experiment.factor.e6.copy()
   experiment.factor.e7.step = ['part']
   experiment.factor.e7.sensor.append('all')
   experiment.factor.e7.source = ['car', 'motorbike', 'truck', 'voice', 'birds', 'seagulls', 'background']
 
   experiment.factor.e7.part = ['day', 'evening', 'night', 'full']
 
-  experiment.metric.presence = ['mean%', 'std%']
-  experiment.metric.timeOfPresence = ['mean%', 'std%']
-  experiment.metric.duration = ['mean']
+  experiment.metric.presence = ['mean%']
+
+  # experiment.metric.presence = ['mean%', 'std%']
+  # experiment.metric.timeOfPresence = ['mean%', 'std%']
+  # experiment.metric.duration = ['mean']
   return experiment
 
 def step(setting, experiment):
