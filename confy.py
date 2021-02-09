@@ -124,11 +124,11 @@ def step(setting, experiment):
     np.save(experiment.path.output+setting.id()+'_duration.npy', duration)
 
 def getData(setting, experiment, type='presence'):
-  presenceName = experiment.path.output+setting.id(hideFactor=['source', 'part']).replace('step_part', 'step_presence')+'_'+type+'.npy'
+  presenceName = experiment.path.output+setting.id(hide=['source', 'part']).replace('step_part', 'step_presence')+'_'+type+'.npy'
   # print(presenceName)
   presence = np.load(presenceName)
 
-  timeName = experiment.path.input+setting.id(hideFactor=['source', 'part'], sort=False).replace('step_part', 'step_data')+'_time.npy'
+  timeName = experiment.path.input+setting.id(hide=['source', 'part'], sort=False).replace('step_part', 'step_data')+'_time.npy'
   # print(timeName)
   timeVec = np.load(timeName)
   if setting.part == 'day':
