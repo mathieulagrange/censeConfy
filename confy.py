@@ -61,7 +61,7 @@ def set(args):
   experiment.factor.e6 = experiment.factor.e2.copy()
   experiment.factor.e6.typology = ['cmtvbsn']
 
-  experiment.factor.e7 = experiment.factor.e4.copy()
+  experiment.factor.e7 = experiment.factor.e6.copy()
   experiment.factor.e7.step = ['part']
   experiment.factor.e7.sensor.append('all')
   experiment.factor.e7.source = ['car', 'motorbike', 'truck', 'voice', 'birds', 'seagulls', 'background']
@@ -78,22 +78,23 @@ def step(setting, experiment):
   if setting.step == 'data':
     import prepareDataNpy
     prepareDataNpy.step(setting, experiment)
-  if setting.step == 'presence':
+  if setting.step == 'presence' and setting.sensor != 'all':
     sys.path.append('../specialization')
     from inference import main
     config = types.SimpleNamespace()
     config.rnn = True
     config.sensorData = True
     config.modelName = 'train_scene_source_lorient'
-    config.modelPath = experiment.path.output+'../specialization/model/'
-    config.datasetName = experiment.path.input+setting.id(sort=False).replace('step_presence', 'step_data')+'_spec.npy'
+    config.modelPath = experiment.path.output+'../specialization/model_'+setting.typology+'/'
+    config.datasetName = experiment.path.input+setting.id(sort=False).replace('step_presence', 'step_data').replace('_typology_'+setting.typology, '')+'_spec.npy'
     config.outputPath = ''
     config.test = False
     config.classes = list(setting.typology)
-
+    config.debug = experiment.status.debug
     presence, timeOfPresence = main(config)
-    # print(presence.shape)
-    # print(timeOfPresence.shape)
+    if experiment.status.debug:
+      print(presence.shape)
+      print(timeOfPresence.shape)
 
     np.save(experiment.path.output+setting.id()+'_presence.npy', presence)
     np.save(experiment.path.output+setting.id()+'_timeOfPresence.npy', timeOfPresence)
@@ -106,8 +107,8 @@ def step(setting, experiment):
       presence = np.zeros(0)
       timeOfPresence = np.zeros(0)
       for k in range(len(experiment.factor.sensor)-1):
-        presence = np.concatenate((presence, getData(setting.alternative('sensor', value=k), experiment)))
-        timeOfPresence = np.concatenate((timeOfPresence, getData(setting.alternative('sensor', value=k), experiment, 'timeOfPresence')))
+        presence = np.concatenate((presence, getData(setting.replace('sensor', value=k), experiment)))
+        timeOfPresence = np.concatenate((timeOfPresence, getData(setting.replace('sensor', value=k), experiment, 'timeOfPresence')))
 
     # print(presence)
     presenceName = experiment.path.output+setting.id()+'_presence.npy'
@@ -122,13 +123,16 @@ def step(setting, experiment):
     np.save(experiment.path.output+setting.id()+'_duration.npy', duration)
 
 def getData(setting, experiment, type='presence'):
-  presenceName = experiment.path.output+setting.id(hideFactor=['source', 'part']).replace('step_part', 'step_presence')+'_'+type+'.npy'
-  # print(presenceName)
+  presenceName = experiment.path.output+setting.id(hide=['source', 'part']).replace('step_part', 'step_presence')+'_'+type+'.npy'
+  if experiment.status.debug:
+    print(presenceName)
   presence = np.load(presenceName)
-
-  timeName = experiment.path.input+setting.id(hideFactor=['source', 'part'], sort=False).replace('step_part', 'step_data')+'_time.npy'
+  # print(presence.shape)
+  timeName = experiment.path.input+setting.id(hide=['source', 'part'], sort=False).replace('step_part', 'step_data').replace('_typology_'+setting.typology, '')+'_time.npy'
   # print(timeName)
   timeVec = np.load(timeName)
+
+  # print(setting.part)
   if setting.part == 'day':
     period = [7, 20]
   if setting.part == 'evening':
@@ -137,12 +141,15 @@ def getData(setting, experiment, type='presence'):
     period = [0, 7]
   if setting.part == 'full':
     period = [0, 24]
-  if setting.source == 'traffic':
-    source = 0
-  if setting.source == 'voice':
-    source = 1
-  if setting.source == 'bird':
-    source = 2
+  # if setting.typology = 'tvb':
+  # if setting.source == 'traffic':
+  #   source = 0
+  # if setting.source == 'voice':
+  #   source = 1
+  # if setting.source == 'bird':
+  #   source = 2
+  source = experiment.factor.source.index(setting.source)
+  # print(source)
 
   return selectData(presence, timeVec, period, source)
 
