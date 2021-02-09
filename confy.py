@@ -68,9 +68,11 @@ def set(args):
 
   experiment.factor.e7.part = ['day', 'evening', 'night', 'full']
 
-  experiment.metric.presence = ['mean%', 'std%']
-  experiment.metric.timeOfPresence = ['mean%', 'std%']
-  experiment.metric.duration = ['mean']
+  experiment.metric.presence = ['mean%']
+
+  # experiment.metric.presence = ['mean%', 'std%']
+  # experiment.metric.timeOfPresence = ['mean%', 'std%']
+  # experiment.metric.duration = ['mean']
   return experiment
 
 def step(setting, experiment):
@@ -124,6 +126,7 @@ def step(setting, experiment):
 
 def getData(setting, experiment, type='presence'):
   presenceName = experiment.path.output+setting.id(hide=['source', 'part']).replace('step_part', 'step_presence')+'_'+type+'.npy'
+
   if experiment.status.debug:
     print(presenceName)
   presence = np.load(presenceName)
