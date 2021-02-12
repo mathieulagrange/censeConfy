@@ -59,6 +59,8 @@ def step(setting, experiment):
   fCount = 0
   arrayTime = np.zeros((len(fileNames)*6))
   arraySpec = np.zeros((len(fileNames)*6, nbVec, nbFrequencyBands))
+  arrayEnergy = np.zeros((len(fileNames)*6, nbVec, 2))
+
   # print(fileNames)
   for inputFileName in tq.tqdm(fileNames, total=len(fileNames)):
     shutil.copy(inputFileName, '/tmp/confy.zip')
@@ -77,6 +79,7 @@ def step(setting, experiment):
         elif r%4800==nbVec:
           rCount = 0
           arrayTime[fCount] = data[0, 0]
+          arrayEnergy[fCount, :, :] = data[:, 1:3]
           arraySpec[fCount, :, :] = data[:, 3:][None]
           fCount += 1
             #print(arraySpec.shape)
@@ -84,3 +87,4 @@ def step(setting, experiment):
     os.remove('/tmp/confy.zip')
   np.save(dataPath+dataId+'_time.npy', arrayTime)
   np.save(dataPath+dataId+'_spec.npy', arraySpec)
+  np.save(dataPath+dataId+'_energy.npy', arrayEnergy)

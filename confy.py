@@ -21,6 +21,7 @@ def set(args):
   experiment.project.version = '0.1'
 
   experiment.path.code = '~/experiments/'+experiment.project.name+'/'
+  experiment.path.archive = '/tmp/'+experiment.project.name+'/'
   experiment.path.input = '~/data/storage/cense/confy/data/'
   experiment.path.output = '~/drive/experiments/data/local/'+experiment.project.name+'/'
   experiment.setPath()
@@ -99,7 +100,7 @@ def step(setting, experiment):
       print(timeOfPresence.shape)
 
     np.save(experiment.path.output+setting.id()+'_presence.npy', presence)
-    np.save(experiment.path.output+setting.id()+'_timeOfPresence.npy', timeOfPresence)
+    # np.save(experiment.path.output+setting.id()+'_timeOfPresence.npy', timeOfPresence)
   if setting.step == 'part':
     # print(setting.source)
     if setting.sensor != 'all':
