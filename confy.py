@@ -8,6 +8,7 @@ import csv
 import sys
 import types
 import datetime
+import energy as en
 
 if __name__ == "__main__":
   el.run.run()
@@ -66,10 +67,20 @@ def set(args):
   experiment.factor.e7.step = ['part']
   experiment.factor.e7.sensor.append('all')
   experiment.factor.e7.source = ['car', 'motorbike', 'truck', 'voice', 'birds', 'seagulls', 'background']
-
   experiment.factor.e7.part = ['day', 'evening', 'night', 'full']
 
+  experiment.factor.e8 = experiment.factor.e1.copy()
+  experiment.factor.e8.step = ['energy']
+
+  experiment.factor.e9 = experiment.factor.e8.copy()
+  experiment.factor.e9.step = ['partEnergy']
+  experiment.factor.e9.sensor.append('all')
+  experiment.factor.e9.source = ['laeqMedian', 'laeqMean', 'leqMedian', 'leqMean']
+  experiment.factor.e9.part = ['day', 'evening', 'night', 'full']
+
+
   experiment.metric.presence = ['mean%']
+  experiment.metric.energy = ['mean']
 
   # experiment.metric.presence = ['mean%', 'std%']
   # experiment.metric.timeOfPresence = ['mean%', 'std%']
@@ -101,11 +112,13 @@ def step(setting, experiment):
 
     np.save(experiment.path.output+setting.id()+'_presence.npy', presence)
     # np.save(experiment.path.output+setting.id()+'_timeOfPresence.npy', timeOfPresence)
+  if setting.step == 'energy':
+    en.energyIndicators(setting, experiment)
   if setting.step == 'part':
     # print(setting.source)
     if setting.sensor != 'all':
       presence = getData(setting, experiment)
-      timeOfPresence = getData(setting, experiment, type='timeOfPresence')
+      # timeOfPresence = getData(setting, experiment, type='timeOfPresence')
     else:
       presence = np.zeros(0)
       timeOfPresence = np.zeros(0)
@@ -120,23 +133,34 @@ def step(setting, experiment):
     timeOfPresenceName = experiment.path.output+setting.id()+'_timeOfPresence.npy'
     # print(timeOfPresence.shape)
     np.save(timeOfPresenceName, timeOfPresence)
+  if setting.step == 'partEnergy':
+    # print(setting.source)
+    if setting.sensor != 'all':
+      energy = getData(setting, experiment, type='energy')
+    else:
+      energy = np.zeros(0)
+      for k in range(len(experiment.factor.sensor)-1):
+        energy = np.concatenate((energy, getData(setting.replace('sensor', value=k), experiment, type='energy')))
+
+    energyName = experiment.path.output+setting.id()+'_energy.npy'
+    # print(energy.shape)
+    np.save(energyName, energy)
 
   if setting.step in ['data', 'presence']:
     duration = time.time()-tic
     np.save(experiment.path.output+setting.id()+'_duration.npy', duration)
 
 def getData(setting, experiment, type='presence'):
-  presenceName = experiment.path.output+setting.id(hide=['source', 'part']).replace('step_part', 'step_presence')+'_'+type+'.npy'
+
+  pathName = experiment.path.output+setting.id(hide=['source', 'part', 'indicator']).replace('step_partEnergy', 'step_'+type)+'_'+type+'.npy'
 
   if experiment.status.debug:
-    print(presenceName)
-  presence = np.load(presenceName)
-  # print(presence.shape)
-  timeName = experiment.path.input+setting.id(hide=['source', 'part'], sort=False).replace('step_part', 'step_data').replace('_typology_'+setting.typology, '')+'_time.npy'
-  # print(timeName)
+    print(pathName)
+  data = np.load(pathName)
+  # print(data.shape)
+  timeName = experiment.path.input+setting.id(hide=['source', 'part', 'typology', 'indicator'], sort=False).replace('step_partEnergy', 'step_data').replace('step_part', 'step_data')+'_time.npy'
   timeVec = np.load(timeName)
 
-  # print(setting.part)
   if setting.part == 'day':
     period = [7, 20]
   if setting.part == 'evening':
@@ -145,17 +169,11 @@ def getData(setting, experiment, type='presence'):
     period = [0, 7]
   if setting.part == 'full':
     period = [0, 24]
-  # if setting.typology = 'tvb':
-  # if setting.source == 'traffic':
-  #   source = 0
-  # if setting.source == 'voice':
-  #   source = 1
-  # if setting.source == 'bird':
-  #   source = 2
+
   source = experiment.factor.source.index(setting.source)
   # print(source)
 
-  return selectData(presence, timeVec, period, source)
+  return selectData(data, timeVec, period, source)
 
 def selectData(presence, time, period, source):
   acc = 0
