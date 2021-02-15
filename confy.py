@@ -79,8 +79,8 @@ def set(args):
   experiment.factor.e9.part = ['day', 'evening', 'night', 'full']
 
 
-  experiment.metric.presence = ['mean%']
-  experiment.metric.energy = ['mean']
+  experiment.metric.presence = ['nanmean%']
+  experiment.metric.energy = ['nanmean']
 
   # experiment.metric.presence = ['mean%', 'std%']
   # experiment.metric.timeOfPresence = ['mean%', 'std%']
@@ -190,13 +190,15 @@ def selectData(presence, time, period, source):
       # print(presence.shape)
       if presence.ndim>2:
         for b in range(presence.shape[1]):
-          acc += presence[t, b, source]
-          nbAcc += 1
-      else:
+          if not np.isnan([t, b, source]):
+            acc += presence[t, b, source]
+            nbAcc += 1
+      elif not any(np.isnan([t, source])):
         acc += presence[t, source]
         nbAcc += 1
     if ph>h:
       if nbAcc:
+        # print(acc)
         a.append(acc/nbAcc)
       acc = 0
       nbAcc = 0
@@ -204,5 +206,5 @@ def selectData(presence, time, period, source):
       ph=h
 
   if len(a)==0:
-    a.append(0)
+    a.append(np.nan)
   return np.array(a)

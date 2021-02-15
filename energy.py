@@ -17,6 +17,6 @@ def energyIndicators(setting, experiment):
 
 def powerMean(d):
   if np.mean(d)==0:
-    return 0
+    return np.nan
   else:
-    return 10*np.log10(np.mean(10*(d/10)))
+    return 10*np.log10(np.mean(10 ** (d/10)))
