@@ -136,15 +136,20 @@ def step(setting, experiment):
   if setting.step == 'partEnergy':
     # print(setting.source)
     if setting.sensor != 'all':
-      energy = getData(setting, experiment, type='energy')
+      (energy, tim) = getData(setting, experiment, type='energy')
     else:
       energy = np.zeros(0)
+      tim = np.zeros(0)
       for k in range(len(experiment.factor.sensor)-1):
-        energy = np.concatenate((energy, getData(setting.replace('sensor', value=k), experiment, type='energy')))
+        (en, ti) =  getData(setting.replace('sensor', value=k), experiment, type='energy')
+        energy = np.concatenate((energy, en))
+        tim = np.concatenate((tim, ti))
 
-    energyName = experiment.path.output+setting.id()+'_energy.npy'
+    name = experiment.path.output+setting.id()
     # print(energy.shape)
-    np.save(energyName, energy)
+    np.save(name+'_energy.npy', energy)
+    # print(tim.shape)
+    np.save(name+'_time.npy', tim)
 
   if setting.step in ['data', 'presence']:
     duration = time.time()-tic
@@ -182,11 +187,11 @@ def selectData(presence, time, period, source):
   # print(time.shape)
   a = []
   ph=-1
+  ti = []
   for t in range(presence.shape[0]):
     h = datetime.datetime.utcfromtimestamp(time[t]/1000).hour
     # print(h)
     if h>=period[0] and h<=period[1]:
-      run = True
       # print(presence.shape)
       if presence.ndim>2:
         for b in range(presence.shape[1]):
@@ -199,6 +204,7 @@ def selectData(presence, time, period, source):
     if ph>h:
       if nbAcc:
         # print(acc)
+        ti.append(time[t])
         a.append(acc/nbAcc)
       acc = 0
       nbAcc = 0
@@ -207,4 +213,5 @@ def selectData(presence, time, period, source):
 
   if len(a)==0:
     a.append(np.nan)
-  return np.array(a)
+    ti.append(np.nan)
+  return (np.array(a), np.array(ti))
